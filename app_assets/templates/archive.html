@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>{{ .Campaign.Subject }}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+
+
+    <link href="/public/static/dc-design-system.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+<div class="ds-page">
+    <header class="ds-header">
+        <a class="ds-logo" href="/">
+            <img src="/public/static/images/logo_icon.svg" alt="" />
+            <span>democracy club
+			<em>Mailing lists</em></span>
+        </a>
+
+        <nav>
+            <ul>
+                <li><a href="/subscription/form">Subscribe</a></li>
+                <li><a href="/archive">Mailing list archive</a></li>
+
+            </ul>
+        </nav>
+
+    </header>
+
+    <main id="main" tabindex="-1" class="ds-stack">
+
+        <section class="ds-stack">
+            <h1>{{.Campaign.Subject}}</h1>
+            <p>This is an HTML version of an email we sent on {{  toJson .Campaign.StartedAt | date "02 January 2006" }}.</p>
+            <p>If you would like to receive these emails in future, <a href="/subscription/form">please subscribe</a>.
+        </section>
+        <hr>
+
+        <section class="ds-stack">
+            {{ template "content" . }}
+        </section>
+    </main>
+    <footer class="ds-footer">
+        <div class="ds-block-centered ds-text-centered ds-stack">
+			<div class="ds-copyright ds-width-full">
+				<a class="ds-logo" href="https://democracyclub.org.uk/">
+					<img src="/public/static/images/logo_icon.svg" alt="" width="100"/>
+					<span class="ds-text-left">democracy<br>club</span>
+				</a>
+				<p>Copyright &copy; 2023 Democracy Club</p>
+				<p>Community Interest Company</p>
+				<p>Company No: <a href="https://beta.companieshouse.gov.uk/company/09461226">09461226</a></p>
+			</div>
+		</div>
+    </footer>
+</div>
+</body>
+</html>

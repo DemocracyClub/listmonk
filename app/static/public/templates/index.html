@@ -1,0 +1,74 @@
+{{ define "header" }}
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>{{ .Data.Title }} - {{ .SiteName }}</title>
+	<meta name="description" content="{{ .Data.Description }}" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+
+	{{ if .EnablePublicArchive }}
+	<link rel="alternate" type="application/rss+xml" title="{{ L.T "public.archiveTitle" }} - {{ .SiteName }}"
+	href="{{ .RootURL }}/archive.xml" />
+	{{ end }}
+
+	<link href="/public/static/dc-design-system.css" rel="stylesheet" type="text/css" />
+	<!--	<link href="/public/static/style.css?v2.3.0" rel="stylesheet" type="text/css" />-->
+	<link href="/public/custom.css" rel="stylesheet" type="text/css">
+	<script src="/public/custom.js" async defer></script>
+
+	{{ if ne .FaviconURL "" }}
+	<link rel="shortcut icon" href="{{ .FaviconURL }}" type="image/x-icon" />
+	{{ else }}
+	<link rel="shortcut icon" href="/public/static/images/favicon.png" type="image/x-icon" />
+	{{ end }}
+</head>
+<body>
+
+<div class="ds-page">
+	<a class="ds-skip-link" href="#main">skip to content</a>
+	<header class="ds-header">
+		<a class="ds-logo" href="/">
+			<img src="/public/static/images/logo_icon.svg" alt="" />
+			<span>democracy club
+			<em>Mailing lists</em></span>
+		</a>
+		<nav>
+			<ul>
+				{{ if .EnablePublicSubPage }}
+				<li><a href="{{ .RootURL }}/subscription/form">{{ L.T "public.sub" }}</a></li>
+				{{ end }}
+				
+				
+				{{ if .EnablePublicArchive }}
+				<li><a href="{{ .RootURL }}/archive">{{ L.T "public.archiveTitle" }}</a></li>
+				{{ end }}
+
+			</ul>
+		</nav>
+
+	</header>
+	<main id="main" tabindex="-1" class="ds-stack">
+
+		{{ end }}
+
+
+		{{ define "footer" }}
+	</main>
+	<footer class="ds-footer">
+		<div class="ds-block-centered ds-text-centered ds-stack">
+			<div class="ds-copyright ds-width-full">
+				<a class="ds-logo" href="https://democracyclub.org.uk/">
+					<img src="/public/static/images/logo_icon.svg" alt="" width="100"/>
+					<span class="ds-text-left">democracy<br>club</span>
+				</a>
+				<p>Copyright &copy; 2023 Democracy Club</p>
+				<p>Community Interest Company</p>
+				<p>Company No: <a href="https://beta.companieshouse.gov.uk/company/09461226">09461226</a></p>
+			</div>
+		</div>
+
+	</footer>
+</div>
+
+{{ end }}

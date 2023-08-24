@@ -1,0 +1,142 @@
+{{ define "subscription" }}
+{{ template "header" .}}
+{{ if not .Data.ShowManage }}
+<section class="ds-stack">
+    <form method="post" class="unsub-form">
+        <h1>{{ L.T "public.unsubTitle" }}</h1>
+        {{ if .Data.AllowBlocklist }}
+        <p>{{ L.T "public.unsubHelp" }}</p>
+        <label for="privacy-blocklist" class="ds-field-checkbox">
+            <input id="privacy-blocklist" type="checkbox" name="blocklist" value="true" checked>
+            <span>{{ L.T "public.unsubFull" }}</span></label>
+        {{ end }}
+
+        <button type="submit" class="ds-button" id="btn-unsub">{{ L.T "public.unsub" }}</button>
+
+        {{ if .Data.AllowPreferences }}
+        <a href="?manage=true">{{ L.T "public.managePrefs" }}</a>
+        {{ end }}
+    </form>
+
+
+    {{ else }}
+    <form method="post" class="manage-form">
+        <input type="hidden" name="manage" value="true" />
+
+        <h2>{{ L.T "public.managePrefs" }}</h2>
+        <div class="ds-field">
+            <label>{{ L.T "globals.fields.name" }}</label>
+            <input type="text" name="name" value="{{ .Data.Subscriber.Name }}" maxlength="256" required />
+        </div>
+
+        {{ if .Data.Subscriptions }}
+
+        <fieldset>
+
+            <legend>{{ L.T "public.managePrefsUnsub" }}</legend>
+            {{ range $i, $l := .Data.Subscriptions }}
+            {{ if ne $l.SubscriptionStatus.Value "unsubscribed" }}
+            <label for="l-{{ $l.UUID}}" class="ds-field-checkbox">
+                <input id="l-{{ $l.UUID}}" type="checkbox" name="l" value="{{ $l.UUID }}" checked>
+                <span>{{ $l.Name }}</span>
+            </label>
+            {{ end }}
+            {{ end }}
+            {{ end }}
+
+            {{ if .Data.AllowBlocklist }}
+            <label for="privacy-blocklist" class="ds-field-checkbox">
+                <input id="privacy-blocklist" type="checkbox" name="blocklist" value="true" onchange="unsubAll(event)" checked />
+                <span>{{ L.T "public.unsubFull" }}</span>
+            </label>
+            {{ end }}
+
+            <button type="submit" class="ds-button" id="btn-unsub">{{ L.T "globals.buttons.save" }}</button>
+        </fieldset>
+    </form>
+</section>
+
+{{ end }}
+
+
+
+
+
+{{ if or .Data.AllowExport .Data.AllowWipe }}
+<form id="data-form" class="data-form" method="post" action="" onsubmit="return handleData()">
+    <section class="ds-stack">
+        <h1>{{ L.T "public.privacyTitle" }}</h1>
+        <fieldset>
+            <legend>Manage your data</legend>
+
+            <div class="ds-stack-smaller">
+
+                {{ if .Data.AllowExport }}
+
+
+                <div class="ds-stack-smallest">
+                    <label for="privacy-export" class="ds-field-radio">
+                        <input id="privacy-export" type="radio" name="data-action" value="export" required/>
+
+                        <span>{{ L.T "public.privacyExport" }}</span>
+                    </label>
+
+                    <small>{{ L.T "public.privacyExportHelp" }}</small>
+                </div>
+                {{ end }}
+
+                {{ if .Data.AllowWipe }}
+                <div class="ds-stack-smallest">
+                    <label for="privacy-wipe" class="ds-field-radio">
+                        <input id="privacy-wipe" type="radio" name="data-action" value="wipe" required/>
+
+                        <span>{{ L.T "public.privacyWipe" }}</span>
+                    </label>
+
+                    <small>{{ L.T "public.privacyWipeHelp" }}</small>
+                </div>
+                {{ end }}
+
+            </div>
+
+        </fieldset>
+
+        <button type="submit" class="ds-button">
+            {{ L.T "globals.buttons.continue" }}
+        </button>
+    </section>
+</form>
+<script>
+    function handleData() {
+        var a = document.querySelector('input[name="data-action"]:checked').value,
+            f = document.querySelector("#data-form");
+        if (a == "export") {
+            f.action = "/subscription/export/{{ .Data.SubUUID }}";
+            return true;
+        } else if (confirm("{{ L.T "public.privacyConfirmWipe" }}")) {
+            f.action = "/subscription/wipe/{{ .Data.SubUUID }}";
+            return true;
+        }
+        return false;
+    }
+
+    function unsubAll(e) {
+        if (e.target.checked) {
+            document.querySelector("input[name=name]").disabled = "disabled";
+        } else {
+            document.querySelector("input[name=name]").removeAttribute("disabled");
+        }
+
+        document.querySelectorAll('input[type=checkbox][name=l]').forEach(function(l) {
+            if (e.target.checked) {
+                l.disabled = "disabled";
+            } else {
+                l.removeAttribute("disabled");
+            }
+        });
+    }
+</script>
+{{ end }}
+
+{{ template "footer" .}}
+{{ end }}

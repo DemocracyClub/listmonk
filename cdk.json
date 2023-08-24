@@ -1,0 +1,15 @@
+{
+  "app": "python3 cdk/app.py",
+  "watch": {
+    "include": [
+      "**"
+    ],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "python/__pycache__",
+      "tests",
+      "test_data"
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{{ define "header" }}
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+    <base target="_blank">
+    <style>
+        .ds-cta {
+          display: inline-block;
+          color: #E6007C;
+          background-color: #fff;
+          font-size: 1.25rem;
+          padding: .875rem 1.25rem;
+          border: .25rem solid;
+          text-decoration: none;
+        }
+        a {
+        	color: #E6007C;
+        }
+    </style>
+</head>
+<body style="font-family: Montserrat, 'Helvetica Neue', Helvetica, sans-serif; font-size: 20px; line-height: 26px;margin: 0;color: #403F41">
+
+<div style="text-align: center">
+    {{ if ne LogoURL "" }}
+    <img src="{{ LogoURL }}" alt="Democracy Club"  height="100" width="100">
+    {{ end }}
+
+</div>
+{{ end }}
+<!-- END header -->
+
+
+
+{{ define "footer" }}
+<!-- footer -->
+    <div style="text-align:center;margin-top:2em;">
+        <hr>
+        Sent from <a href="https://democracyclub.org.uk/">Democracy Club</a>
+    </div>
+
+    </body>
+</html>
+<!-- END footer -->
+{{ end }}

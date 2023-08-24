@@ -1,0 +1,23 @@
+{{ define "home" }}
+{{ template "header" .}}
+
+<div class="ds-card">
+	<div class="ds-card-body">
+		<div class="ds-cluster-center">
+			<div>
+				{{ if .EnablePublicSubPage }}
+				<a href="{{ .RootURL }}/subscription/form" class="ds-cta">{{ L.T "public.sub" }}</a>
+				{{ end }}
+				{{ if .EnablePublicArchive }}
+				<a href="{{ .RootURL }}/archive" class="ds-cta">{{ L.T "public.archiveTitle" }}</a>
+				{{ end }}
+			</div>
+		</div>
+
+	</div>
+
+
+</div>
+
+{{ template "footer" .}}
+{{ end }}
