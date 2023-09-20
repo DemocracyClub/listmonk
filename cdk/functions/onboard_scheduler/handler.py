@@ -24,7 +24,7 @@ def get_past_slice_time():
 
 
 def schedule_onboarding(subscriber: dict):
-    one_day_from_now = datetime.datetime.now() + datetime.timedelta(minutes=2)
+    one_day_from_now = datetime.datetime.now() + datetime.timedelta(days=1)
     schedule = scheduler.create_schedule(
         ScheduleExpression=f"at({datetime.datetime.strftime(one_day_from_now, '%Y-%m-%dT%H:%M:00')})",
         ScheduleExpressionTimezone="Europe/London",
@@ -60,6 +60,8 @@ def get_subscribers():
     return req.json()
 
 def handler(event, context):
+    # Disable this until we have finished the welcome email
+    return
     subscribers = get_subscribers()
     for subscriber in subscribers["data"]["results"]:
         # update the subscriber
