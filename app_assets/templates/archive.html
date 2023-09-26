@@ -33,7 +33,7 @@
 
         <section class="ds-stack">
             <h1>{{.Campaign.Subject}}</h1>
-            <p>This is an HTML version of an email we sent on {{  toJson .Campaign.StartedAt | date "02 January 2006" }}.</p>
+            <p>This is an HTML version of an email we sent on {{ .Campaign.StartedAt.Time.Format "02 Jan 2006" }}.</p>
             <p>If you would like to receive these emails in future, <a href="/subscription/form">please subscribe</a>.
         </section>
         <hr>
