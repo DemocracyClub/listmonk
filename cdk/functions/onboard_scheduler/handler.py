@@ -60,8 +60,6 @@ def get_subscribers():
     return req.json()
 
 def handler(event, context):
-    # Disable this until we have finished the welcome email
-    return
     subscribers = get_subscribers()
     for subscriber in subscribers["data"]["results"]:
         # update the subscriber
