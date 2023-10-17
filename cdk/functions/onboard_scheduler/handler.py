@@ -14,6 +14,7 @@ def format_api_url(endpoint):
     FQDN = os.environ.get("FQDN")
     return f"https://{FQDN}/api/{endpoint}?key={API_KEY}"
 
+
 def get_past_slice_time():
     """
     The formatted date to look backwards in time
@@ -22,9 +23,9 @@ def get_past_slice_time():
     return str(datetime.datetime.now() - datetime.timedelta(days=1))
 
 
-
 def schedule_onboarding(subscriber: dict):
     one_day_from_now = datetime.datetime.now() + datetime.timedelta(days=1)
+    print("Scheduling onboarding")
     schedule = scheduler.create_schedule(
         ScheduleExpression=f"at({datetime.datetime.strftime(one_day_from_now, '%Y-%m-%dT%H:%M:00')})",
         ScheduleExpressionTimezone="Europe/London",
@@ -41,23 +42,25 @@ def schedule_onboarding(subscriber: dict):
         },
         FlexibleTimeWindow={"Mode": "OFF"},
     )
+    print(schedule)
+
 
 def get_subscribers():
     # Check for un-onboarded signups in the last day (day, in case we've missed anyone for some reason)
     past_time_slice = get_past_slice_time()
     url = format_api_url("subscribers")
+    query = f"""
+        subscribers.attribs->>'onboarded' IS NULL 
+        AND subscribers.created_at >= '{past_time_slice}'
+        AND subscribers.id IN (SELECT subscriber_id FROM subscriber_lists WHERE status='confirmed')
+        """
     req = requests.get(
         url,
-        params={
-            "query": f"""
-                subscribers.attribs->>'onboarded' IS NULL 
-                AND subscribers.created_at >= '{past_time_slice}'
-                AND subscribers.id IN (SELECT subscriber_id FROM subscriber_lists WHERE status='confirmed')
-                """
-        },
+        params={"query": query},
     )
     req.raise_for_status()
     return req.json()
+
 
 def handler(event, context):
     subscribers = get_subscribers()

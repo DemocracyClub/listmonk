@@ -89,33 +89,13 @@ def new_subscription(event):
         json=subscriber.as_listmonk_json(),
     )
     if req.status_code == 200:
-        print("added new person, sending welcome event")
+        print("added new person")
         subscriber.subscriber_id = req.json()["data"]["id"]
-        send_first_welcome_email_event(subscriber)
         return True
     if req.status_code == 409:
         print("person alrady exists")
         return True
     req.raise_for_status()
-
-
-def send_first_welcome_email_event(subscriber):
-    print("scheduling new event")
-    import boto3
-
-    client = boto3.client("events", region_name="eu-west-2")
-    data = subscriber.as_listmonk_json()
-    data["subscriber_id"] = subscriber.subscriber_id
-    resp = client.put_events(
-        Entries=[
-            {
-                "Source": "new_subscriber_event",
-                "DetailType": "first_welcome_email",
-                "Detail": json.dumps(data),
-                "EventBusName": os.environ.get("EVENT_BRIDGE_ARN"),
-            },
-        ],
-    )
 
 
 def first_welcome_email(event):
@@ -127,7 +107,8 @@ def first_welcome_email(event):
 
     url = format_api_url("tx")
     data = {"template_id": 4, "subscriber_id": subscriber.subscriber_id}
-    requests.post(url, json=data)
+    req = requests.post(url, json=data)
+    req.raise_for_status()
 
 
 def handler(event, context):

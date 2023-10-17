@@ -248,8 +248,9 @@ class ListMonkStack(Stack):
             environment={
                 "MAILINGLIST_API_KEY": self.LISTMONK_API_KEY,
                 "FQDN": self.FQDN,
-                "EVENT_BRIDGE_ARN": self.event_bus.event_bus_arn
+                "EVENT_BRIDGE_ARN": self.event_bus.event_bus_arn,
             },
+            timeout=Duration.seconds(30),
         )
 
         aws_events.Rule(
@@ -277,9 +278,29 @@ class ListMonkStack(Stack):
                     ]
                 )
             },
-            assumed_by=aws_iam.ServicePrincipal("events.amazonaws.com"),
+            assumed_by=aws_iam.CompositePrincipal(
+                aws_iam.ServicePrincipal("lambda.amazonaws.com"),
+                aws_iam.ServicePrincipal("events.amazonaws.com"),
+                aws_iam.ServicePrincipal("scheduler.amazonaws.com"),
+            )
         )
 
+        onboarder_role = aws_iam.Role(
+            self,
+            "onboarder_role",
+            managed_policies=[
+                aws_iam.ManagedPolicy.from_managed_policy_arn(
+                    self,
+                    "AWSRole",
+                    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+                )
+            ],
+            assumed_by=aws_iam.CompositePrincipal(
+                aws_iam.ServicePrincipal("lambda.amazonaws.com"),
+                aws_iam.ServicePrincipal("events.amazonaws.com"),
+                aws_iam.ServicePrincipal("scheduler.amazonaws.com"),
+            )
+        )
         onboarder = aws_lambda_python_alpha.PythonFunction(
             self,
             "mailing_list_onboarder",
@@ -292,7 +313,9 @@ class ListMonkStack(Stack):
                 "EVENT_BUS_ARN": self.event_bus.event_bus_arn,
                 "EVENT_BUS_ROLE_ARN": target_role.role_arn,
             },
+            role=onboarder_role,
         )
+
         onboarder.add_to_role_policy(
             statement=aws_iam.PolicyStatement(
                 actions=[
@@ -304,6 +327,7 @@ class ListMonkStack(Stack):
                 ],
             )
         )
+
         onboarder_lambda_target = aws_events_targets.LambdaFunction(handler=onboarder)
 
         aws_events.Rule(
