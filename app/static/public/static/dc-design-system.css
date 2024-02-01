@@ -405,7 +405,7 @@ h1, h2 {
   letter-spacing: -0.05em;
 }
 
-a {
+a, a > * {
   color: #E6007C;
   text-decoration: underline;
 }
