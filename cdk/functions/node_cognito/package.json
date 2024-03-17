@@ -2,6 +2,6 @@
   "name": "mailinglist_cognito_at_edge",
   "type": "module",
   "dependencies": {
-    "cognito-at-edge": "1.5.0"
+    "cognito-at-edge": "1.5.1"
   }
 }
