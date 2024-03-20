@@ -2,7 +2,7 @@ aws-cdk-lib==2.92.0
 constructs>=10.0.0
 aws-cdk.aws-lambda-python-alpha==2.92.0a0
 ruff==0.0.285
-black==23.7.0
+black==24.3.0
 boto3==1.28.50
 pytest==7.4.2
 moto==4.2.3
