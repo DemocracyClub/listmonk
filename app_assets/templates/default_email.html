@@ -2,14 +2,20 @@
 <html>
 <head>
     <title>{{ .Campaign.Subject }}</title>
+    <!-- Compiled with Bootstrap Email version: 1.4.1 --><meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
     <base target="_blank">
     <style>
+        * {margin:0;padding:0;font-size: 20px !important; line-height: 1.5 !important;}
+        h1 {font-size: 	29.51px !important;}
+        h2 {font-size: 	24.3px !important;}
         body {
             font-family: 'Helvetica Neue', Helvetica, sans-serif;
             font-size: 20px;
-            line-height: 26px;
+            line-height: 1.5 !important;
             margin: 0;
             color: #403F41;
         }
@@ -31,13 +37,15 @@
             color: #E6007C;
             text-decoration: underline;
         }
-
-        main * + * {
-            margin-top: 3.0517578125rem;
-        }
+        main ul {padding:0 1em;}
+        main {margin-top:1.5em;}
+        main * + h1 {margin-top:1em;}
+        main h1 + * {margin-top:0.5em;}
         main > :is(h1,h2,h3,h4,h5,hgroup) + * {
-            margin-top: 1em;
+            margin-top: 1.5em;
         }
+        main {max-width: 700px !important;margin: 0 auto;padding: 30px;}
+        main p+p {margin-top:1em;}
         main :is(p,ul,ol,li) + :is(p,ul,ol,li) {
             margin-top: 1em !important;
         }
@@ -59,16 +67,27 @@
 <body style="font-family: 'Helvetica Neue', Helvetica, sans-serif; font-size: 20px; line-height: 26px;margin: 0;color: #403F41">
 <header style="text-align: center;margin-top:0.5em">
 
-  <table style="border:0" align="center">
+    <table style="margin: 0 auto; padding: 0; border-width: 0;" align="center" border="0" cellpadding="0" cellspacing="0">
+        <tr style="margin: 0; padding: 0;">
+            <td style="line-height: 24px; font-size: 16px; margin: 0; padding: 0;" align="left"><img src="https://mailinglist.democracyclub.org.uk/public/static/images/logo.png" alt="Democracy Club" height="80" width="80" style="height: auto; line-height: 100%; outline: none; text-decoration: none; display: block; max-width: 100%; margin: 0; padding: 0; border-style: none; border-width: 0;"></td>
+            <td style="font-size: 1.5em; line-height: 24px; margin: 0; padding: 0 0 0 0.5em;" align="left">Democracy<br style="margin: 0; padding: 0;">
+                club</td>
+        </tr>
+    </table>
+    <br>
+
+</header>
+<main>
+    <table style="max-width: 700px; margin:0 auto">
         <tr>
-            <td><img src="https://mailinglist.democracyclub.org.uk/public/static/images/logo.png" alt="Democracy Club"  height="80" width="80"></td>
-            <td style="padding-left:0.5em; text-align: left; font-size: 1.5em;">Democracy<br>club</td>
+            <td>
+                <!-- StartContent -->
+                {{ template "content" . }}
+                <!-- EndContent -->
+            </td>
         </tr>
     </table>
 
-    </header>
-<main style="padding: 30px; max-width: 700px;margin: 0 auto;"> 
-    {{ template "content" . }}
 </main>
 
 <footer>

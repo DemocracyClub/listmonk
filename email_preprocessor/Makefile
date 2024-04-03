@@ -16,10 +16,9 @@ $(TARGET_HTML): $(SOURCE_MD)
 
 # Step 2: Insert HTML content into another HTML file
 insert_content: $(TARGET_HTML)
-	awk '/$(INSERTION_POINT)/{system("cat $(TARGET_HTML)");next}1' $(TEMPLATE_HTML) | bootstrap-email > $(FINAL_HTML)
+	#awk '/$(INSERTION_POINT)/{system("cat $(TARGET_HTML)");next}1' $(TEMPLATE_HTML) | bootstrap-email > $(FINAL_HTML)
+	awk '/$(INSERTION_POINT)/{system("cat $(TARGET_HTML)");next}1' $(TEMPLATE_HTML) | bootstrap-email | sed -n '/<!-- StartContent -->/,/<!-- EndContent -->/p' | sed '1d;$d' > $(FINAL_HTML)
 
 # Clean rule to clean up generated files
 clean:
 	rm -f $(TARGET_HTML) $(FINAL_HTML)
-
-
