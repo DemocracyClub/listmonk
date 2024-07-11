@@ -105,6 +105,10 @@ def first_welcome_email(event):
 
     subscriber = EmailSubscriber.from_subscriber_id(event["detail"]["subscriber_id"])
 
+    if not "b97e389a-c986-4725-8796-2a1cf2734e43" in subscriber.list_uuids:
+        print("Subscriber not in mail email list")
+        return
+
     url = format_api_url("tx")
     data = {"template_id": 4, "subscriber_id": subscriber.subscriber_id}
     req = requests.post(url, json=data)

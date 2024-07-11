@@ -70,6 +70,8 @@ def handler(event, context):
         # send everything, not just the changed content
         attribs = subscriber["attribs"]
         attribs["onboarded"] = "1"
+        if "b97e389a-c986-4725-8796-2a1cf2734e43" in subscriber.list_uuids:
+            attribs["onboarding_skipped"] = "1"
         put_data = {
             "email": subscriber["email"],
             "name": subscriber["name"],
@@ -78,5 +80,6 @@ def handler(event, context):
             "attribs": attribs,
         }
         url = format_api_url(f"subscribers/{subscriber['id']}")
-        req = requests.put(url, json=put_data)
-        schedule_onboarding(subscriber)
+        requests.put(url, json=put_data)
+        if "b97e389a-c986-4725-8796-2a1cf2734e43" in subscriber.list_uuids:
+            schedule_onboarding(subscriber)
