@@ -88,11 +88,6 @@ class ListMonkStack(Stack):
             Name="/MailingList/EventBusOrgPaths"
         )["Parameter"]["Value"]
 
-        us_ssm_client = boto3.client("ssm", region_name="us-east-1")
-        self.CONGITO_FUNCTION_ARN = us_ssm_client.get_parameter(
-            Name="/MailingList/CognitoFunctionArn"
-        )["Parameter"]["Value"]
-
         self.app_function = self.make_listmonk()
         self.cloudfront = self.make_cloudfront()
         self.make_event_bus()
@@ -174,9 +169,7 @@ class ListMonkStack(Stack):
             protocol_policy=aws_cloudfront.OriginProtocolPolicy.HTTP_ONLY,
         )
 
-        cognito_function = Version.from_version_arn(
-            self, "cognito_function", version_arn=self.CONGITO_FUNCTION_ARN
-        )
+
         distribution = aws_cloudfront.Distribution(
             self,
             "ListMonkCloudFront",
@@ -187,12 +180,6 @@ class ListMonkStack(Stack):
                 allowed_methods=aws_cloudfront.AllowedMethods.ALLOW_ALL,
                 cache_policy=aws_cloudfront.CachePolicy.CACHING_DISABLED,
                 origin_request_policy=aws_cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
-                edge_lambdas=[
-                    EdgeLambda(
-                        event_type=aws_cloudfront.LambdaEdgeEventType.VIEWER_REQUEST,
-                        function_version=cognito_function,
-                    )
-                ],
             ),
         )
 

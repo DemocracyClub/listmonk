@@ -111,10 +111,6 @@ Make a note of the Access key and Secret access key for later.
 * `/MailingList/ListMonkApiKey` The API key that ListMonk API Clients must 
   use to authenticate against `https://{ListMonkFQDN}/api/` via the 
   `Authorization` header
-* `/MailingList/userPoolAppId` The Cognito app ID to use
-* `/MailingList/userPoolAppSecret` The Cognito app secret
-* `/MailingList/userPoolDomain` The Cognito user pool domain
-* `/MailingList/userPoolId` The Cognito user pool ID
 * `/MailingList/LISTMONK_db__host` The RDS host
 * `/MailingList/LISTMONK_db__user` The RDS user
 * `/MailingList/LISTMONK_db__password` The RDS password

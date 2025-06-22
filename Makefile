@@ -26,12 +26,6 @@ app/static/public/static/fonts: build/design-system
 static: app/static/public/static/dc-design-system.css app/static/public/static/images app/static/public/static/fonts
 
 
-.PHONY: deploy_lambda_at_edge
-deploy_lambda_at_edge: static
-	cd cdk/functions/node_cognito/ && npm install
-	cdk deploy LambdaAtEdgeStack
-
-
 .PHONY: deploy
-deploy: deploy_lambda_at_edge
+deploy: static
 	cdk deploy ListMonkStack
