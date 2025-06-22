@@ -1,0 +1,24 @@
+{{ define "admin-login" }}
+{{ template "header" .}}
+
+<section class="login">
+    <h2>{{ .L.T "users.login"}}</h2>
+
+    {{ if .Data.OIDCProvider }}
+    <form method="post" action="/auth/oidc">
+        <div>
+            <input type="hidden" name="nonce" value="{{ .Data.Nonce }}"/>
+            <input type="hidden" name="next" value="{{ .Data.NextURI }}"/>
+            <p>
+                <button class="ds-button" type="submit">
+                    {{ .L.Ts "users.loginOIDC" "name" .Data.OIDCProvider }}
+                </button>
+            </p>
+        </div>
+    </form>
+    {{ end }}
+
+</section>
+
+{{ template "footer" .}}
+{{ end }}
