@@ -1,4 +1,4 @@
-FROM listmonk/listmonk:latest
+FROM listmonk/listmonk:v5.0.2
 ADD config.toml .
 
 ENV LISTMONK_app__address=0.0.0.0:8000
