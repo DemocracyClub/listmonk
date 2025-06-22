@@ -1,0 +1,4 @@
+[db]
+database = "listmonk"
+
+ssl_mode = "require"

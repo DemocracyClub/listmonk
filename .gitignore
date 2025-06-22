@@ -160,6 +160,6 @@ cdk.out
 cdk.context.json
 
 listmonk
-config.toml
+./config.toml
 
 lambda_debugging
