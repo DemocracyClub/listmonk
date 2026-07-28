@@ -1,33 +1,28 @@
 import typing
-from pathlib import Path
 
-import aws_cdk
 import boto3
 from aws_cdk import (
+    Duration,
     Environment,
     Stack,
-    Duration,
-    aws_apigateway,
     aws_certificatemanager,
     aws_cloudfront,
     aws_cloudfront_origins,
-    aws_cloudfront_origins,
+    aws_ecs,
+    aws_ecs_patterns,
+    aws_events,
+    aws_events_targets,
     aws_iam,
     aws_lambda,
     aws_lambda_python_alpha,
     aws_route53,
     aws_route53_targets,
     aws_ssm,
-    aws_ecs,
-    aws_ecs_patterns,
-    aws_elasticloadbalancingv2 as elbv2,
-    aws_events,
-    aws_events_targets,
 )
-from aws_cdk.aws_cloudfront import EdgeLambda
+from aws_cdk import (
+    aws_elasticloadbalancingv2 as elbv2,
+)
 from aws_cdk.aws_ecr_assets import DockerImageAsset
-from aws_cdk.aws_iam import CompositePrincipal
-from aws_cdk.aws_lambda import Version
 from constructs import Construct
 
 

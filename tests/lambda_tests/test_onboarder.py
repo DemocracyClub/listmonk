@@ -1,4 +1,3 @@
-import json
 
 import boto3
 import pytest
@@ -7,9 +6,8 @@ from dateutil.tz import tzlocal
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime
 from moto import mock_scheduler
-from responses import matchers
-
 from onboard_scheduler.handler import get_subscribers, handle
+from responses import matchers
 
 SOME_UNONBOARDED_SUBSCRIBERS = {
     "data": {

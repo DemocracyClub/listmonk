@@ -5,7 +5,6 @@ import os
 import boto3
 import requests
 
-
 scheduler = boto3.client("scheduler", region_name="eu-west-2")
 
 

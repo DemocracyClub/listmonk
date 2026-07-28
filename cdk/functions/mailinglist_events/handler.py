@@ -1,4 +1,3 @@
-import json
 import os
 from dataclasses import dataclass
 
@@ -107,7 +106,7 @@ def first_welcome_email(event):
         event["detail"]["subscriber_id"]
     )
 
-    if not "b97e389a-c986-4725-8796-2a1cf2734e43" in subscriber.list_uuids:
+    if "b97e389a-c986-4725-8796-2a1cf2734e43" not in subscriber.list_uuids:
         print("Subscriber not in mail email list")
         return
 
