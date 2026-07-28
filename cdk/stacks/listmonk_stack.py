@@ -53,26 +53,36 @@ class ListMonkStack(Stack):
             self, "CertificateArn", "/MailingList/CertificateArn"
         ).string_value
 
-        self.MEDIA_BUCKET_NAME = aws_ssm.StringParameter.from_string_parameter_name(
-            self, "S3MediaBucketName", "/MailingList/S3MediaBucketName"
-        ).string_value
+        self.MEDIA_BUCKET_NAME = (
+            aws_ssm.StringParameter.from_string_parameter_name(
+                self, "S3MediaBucketName", "/MailingList/S3MediaBucketName"
+            ).string_value
+        )
 
-        self.LISTMONK_DB_HOST = aws_ssm.StringParameter.from_string_parameter_name(
-            self, "LISTMONK_db__host", "/MailingList/LISTMONK_db__host"
-        ).string_value
-        self.LISTMONK_DB_PASSWORD = aws_ssm.StringParameter.from_string_parameter_name(
-            self,
-            "LISTMONK_db__password",
-            "/MailingList/LISTMONK_db__password",
-        ).string_value
-        self.LISTMONK_API_KEY = aws_ssm.StringParameter.from_string_parameter_name(
-            self,
-            "ListMonkApiKey",
-            "/MailingList/ListMonkApiKey",
-        ).string_value
-        self.LISTMONK_DB_USER = aws_ssm.StringParameter.from_string_parameter_name(
-            self, "LISTMONK_db__user", "/MailingList/LISTMONK_db__user"
-        ).string_value
+        self.LISTMONK_DB_HOST = (
+            aws_ssm.StringParameter.from_string_parameter_name(
+                self, "LISTMONK_db__host", "/MailingList/LISTMONK_db__host"
+            ).string_value
+        )
+        self.LISTMONK_DB_PASSWORD = (
+            aws_ssm.StringParameter.from_string_parameter_name(
+                self,
+                "LISTMONK_db__password",
+                "/MailingList/LISTMONK_db__password",
+            ).string_value
+        )
+        self.LISTMONK_API_KEY = (
+            aws_ssm.StringParameter.from_string_parameter_name(
+                self,
+                "ListMonkApiKey",
+                "/MailingList/ListMonkApiKey",
+            ).string_value
+        )
+        self.LISTMONK_DB_USER = (
+            aws_ssm.StringParameter.from_string_parameter_name(
+                self, "LISTMONK_db__user", "/MailingList/LISTMONK_db__user"
+            ).string_value
+        )
 
         # The first part of this should work, but a CDK bug means we can't look
         # up hosted zones with an SSM placeholder. Use boto to get it.
@@ -123,7 +133,9 @@ class ListMonkStack(Stack):
             "listmonk_fargate",
             cluster=cluster,
             task_image_options=aws_ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
-                image=aws_ecs.ContainerImage.from_docker_image_asset(listmonk_asset),
+                image=aws_ecs.ContainerImage.from_docker_image_asset(
+                    listmonk_asset
+                ),
                 container_port=8000,
                 environment={
                     "LISTMONK_db__host": self.LISTMONK_DB_HOST,
@@ -169,7 +181,6 @@ class ListMonkStack(Stack):
             protocol_policy=aws_cloudfront.OriginProtocolPolicy.HTTP_ONLY,
         )
 
-
         distribution = aws_cloudfront.Distribution(
             self,
             "ListMonkCloudFront",
@@ -201,7 +212,9 @@ class ListMonkStack(Stack):
 
     def make_event_bus(self):
         self.event_bus = aws_events.EventBus(
-            self, "event_bus", event_bus_name=f"MailingListEvents-{self.dc_environment}"
+            self,
+            "event_bus",
+            event_bus_name=f"MailingListEvents-{self.dc_environment}",
         )
 
         cross_account_policy = aws_iam.PolicyStatement(
@@ -269,7 +282,7 @@ class ListMonkStack(Stack):
                 aws_iam.ServicePrincipal("lambda.amazonaws.com"),
                 aws_iam.ServicePrincipal("events.amazonaws.com"),
                 aws_iam.ServicePrincipal("scheduler.amazonaws.com"),
-            )
+            ),
         )
 
         onboarder_role = aws_iam.Role(
@@ -286,7 +299,7 @@ class ListMonkStack(Stack):
                 aws_iam.ServicePrincipal("lambda.amazonaws.com"),
                 aws_iam.ServicePrincipal("events.amazonaws.com"),
                 aws_iam.ServicePrincipal("scheduler.amazonaws.com"),
-            )
+            ),
         )
         onboarder = aws_lambda_python_alpha.PythonFunction(
             self,
@@ -315,7 +328,9 @@ class ListMonkStack(Stack):
             )
         )
 
-        onboarder_lambda_target = aws_events_targets.LambdaFunction(handler=onboarder)
+        onboarder_lambda_target = aws_events_targets.LambdaFunction(
+            handler=onboarder
+        )
 
         aws_events.Rule(
             self,

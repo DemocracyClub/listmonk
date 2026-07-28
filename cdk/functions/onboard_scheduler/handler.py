@@ -76,7 +76,9 @@ def handler(event, context):
             "email": subscriber["email"],
             "name": subscriber["name"],
             "status": subscriber["status"],
-            "lists": [mailing_list["id"] for mailing_list in subscriber["lists"]],
+            "lists": [
+                mailing_list["id"] for mailing_list in subscriber["lists"]
+            ],
             "attribs": attribs,
         }
         url = format_api_url(f"subscribers/{subscriber['id']}")

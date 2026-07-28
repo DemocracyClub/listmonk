@@ -103,7 +103,9 @@ def first_welcome_email(event):
         print("subscriber ID not in event")
         return
 
-    subscriber = EmailSubscriber.from_subscriber_id(event["detail"]["subscriber_id"])
+    subscriber = EmailSubscriber.from_subscriber_id(
+        event["detail"]["subscriber_id"]
+    )
 
     if not "b97e389a-c986-4725-8796-2a1cf2734e43" in subscriber.list_uuids:
         print("Subscriber not in mail email list")
