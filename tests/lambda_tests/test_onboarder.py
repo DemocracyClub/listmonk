@@ -1,5 +1,3 @@
-import json
-
 import boto3
 import pytest
 import responses
@@ -7,9 +5,8 @@ from dateutil.tz import tzlocal
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime
 from moto import mock_scheduler
-from responses import matchers
-
 from onboard_scheduler.handler import get_subscribers, handle
+from responses import matchers
 
 SOME_UNONBOARDED_SUBSCRIBERS = {
     "data": {
@@ -97,7 +94,10 @@ def test_handler(
             "city": "Bengaluru",
             "onboarded": "1",
             "projects": 3,
-            "stack": {"frameworks": ["echo", "go"], "languages": ["go", "python"]},
+            "stack": {
+                "frameworks": ["echo", "go"],
+                "languages": ["go", "python"],
+            },
         },
         "email": "test@test.com",
         "lists": [1],
@@ -119,7 +119,9 @@ def test_handler(
             "Arn": "arn:aws:scheduler:eu-west-2:123456789012:schedule/default/Onboard-subscriber-1",
             "CreationDate": FakeDatetime(2023, 1, 14, 0, 0, tzinfo=tzlocal()),
             "GroupName": "default",
-            "LastModificationDate": FakeDatetime(2023, 1, 14, 0, 0, tzinfo=tzlocal()),
+            "LastModificationDate": FakeDatetime(
+                2023, 1, 14, 0, 0, tzinfo=tzlocal()
+            ),
             "Name": "Onboard-subscriber-1",
             "State": "ENABLED",
             "Target": {

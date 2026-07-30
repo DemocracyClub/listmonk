@@ -16,11 +16,9 @@ async def homepage(request):
     else:
         output = result.stderr
 
-    return JSONResponse({'html': output})
+    return JSONResponse({"html": output})
 
 
-routes = [
-    Route("/", endpoint=homepage)
-]
+routes = [Route("/", endpoint=homepage)]
 
 app = Starlette(debug=True, routes=routes)
