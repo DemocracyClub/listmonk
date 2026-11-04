@@ -8,6 +8,8 @@ from aws_cdk import (
     aws_certificatemanager,
     aws_cloudfront,
     aws_cloudfront_origins,
+    aws_cloudwatch,
+    aws_cloudwatch_actions,
     aws_ecs,
     aws_ecs_patterns,
     aws_events,
@@ -17,6 +19,9 @@ from aws_cdk import (
     aws_lambda_python_alpha,
     aws_route53,
     aws_route53_targets,
+    aws_sns,
+    aws_sns_subscriptions,
+    aws_sqs,
     aws_ssm,
 )
 from aws_cdk import (
@@ -24,6 +29,9 @@ from aws_cdk import (
 )
 from aws_cdk.aws_ecr_assets import DockerImageAsset
 from constructs import Construct
+
+# The ListMonk API user that /MailingList/ListMonkApiKey is the token for
+LISTMONK_API_USER = "lambda_key"
 
 
 class ListMonkStack(Stack):
@@ -78,6 +86,9 @@ class ListMonkStack(Stack):
                 self, "LISTMONK_db__user", "/MailingList/LISTMONK_db__user"
             ).string_value
         )
+        self.ALERT_EMAIL = aws_ssm.StringParameter.from_string_parameter_name(
+            self, "AlertEmail", "/MailingList/AlertEmail"
+        ).string_value
 
         # The first part of this should work, but a CDK bug means we can't look
         # up hosted zones with an SSM placeholder. Use boto to get it.
@@ -107,7 +118,7 @@ class ListMonkStack(Stack):
                 )
             ],
         )
-        listmonk_role = aws_iam.Role(
+        aws_iam.Role(
             self,
             "listmonk_policy",
             inline_policies={"S3Access": s3_bucket_policy},
@@ -234,6 +245,16 @@ class ListMonkStack(Stack):
 
         self.event_bus.add_to_resource_policy(cross_account_policy)
 
+        # Holds events that couldn't be processed. Messages contain subscribers'
+        # personal data, so they're encrypted and only kept for as long as it
+        # might reasonably take to fix the problem and replay them.
+        event_dlq = aws_sqs.Queue(
+            self,
+            "mailing_list_events_dlq",
+            encryption=aws_sqs.QueueEncryption.SQS_MANAGED,
+            retention_period=Duration.days(14),
+        )
+
         event_receiver_lambder = aws_lambda_python_alpha.PythonFunction(
             self,
             "mailing_list_event_receiver",
@@ -241,11 +262,14 @@ class ListMonkStack(Stack):
             runtime=aws_lambda.Runtime.PYTHON_3_12,
             index="handler.py",
             environment={
+                "MAILINGLIST_API_USER": LISTMONK_API_USER,
                 "MAILINGLIST_API_KEY": self.LISTMONK_API_KEY,
                 "FQDN": self.FQDN,
                 "EVENT_BRIDGE_ARN": self.event_bus.event_bus_arn,
             },
             timeout=Duration.seconds(30),
+            # Catches events the function still fails on after Lambda's retries
+            dead_letter_queue=event_dlq,
         )
 
         aws_events.Rule(
@@ -255,7 +279,37 @@ class ListMonkStack(Stack):
             event_pattern=aws_events.EventPattern(
                 detail_type=["new_subscription", "first_welcome_email"]
             ),
-        ).add_target(aws_events_targets.LambdaFunction(event_receiver_lambder))
+        ).add_target(
+            aws_events_targets.LambdaFunction(
+                event_receiver_lambder,
+                # Catches events that EventBridge couldn't deliver to the function
+                dead_letter_queue=event_dlq,
+            )
+        )
+
+        self.alert_topic = aws_sns.Topic(self, "mailing_list_alerts")
+        self.alert_topic.add_subscription(
+            aws_sns_subscriptions.EmailSubscription(self.ALERT_EMAIL)
+        )
+
+        event_dlq_alarm = event_dlq.metric_approximate_number_of_messages_visible(
+            period=Duration.minutes(5),
+            statistic="Maximum",
+        ).create_alarm(
+            self,
+            "mailing_list_events_dlq_alarm",
+            alarm_description=(
+                "Mailing list sign up or welcome email events are failing. "
+                "See 'Failed sign ups' in the README."
+            ),
+            threshold=1,
+            evaluation_periods=1,
+            comparison_operator=aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+            treat_missing_data=aws_cloudwatch.TreatMissingData.NOT_BREACHING,
+        )
+        event_dlq_alarm.add_alarm_action(
+            aws_cloudwatch_actions.SnsAction(self.alert_topic)
+        )
 
     def make_onboarder(self):
         target_role = aws_iam.Role(
@@ -303,12 +357,14 @@ class ListMonkStack(Stack):
             runtime=aws_lambda.Runtime.PYTHON_3_12,
             index="handler.py",
             environment={
+                "MAILINGLIST_API_USER": LISTMONK_API_USER,
                 "MAILINGLIST_API_KEY": self.LISTMONK_API_KEY,
                 "FQDN": self.FQDN,
                 "EVENT_BUS_ARN": self.event_bus.event_bus_arn,
                 "EVENT_BUS_ROLE_ARN": target_role.role_arn,
             },
             role=onboarder_role,
+            timeout=Duration.seconds(60),
         )
 
         onboarder.add_to_role_policy(
@@ -332,4 +388,25 @@ class ListMonkStack(Stack):
             "onboarder-schedule",
             schedule=aws_events.Schedule.rate(Duration.hours(1)),
             targets=[onboarder_lambda_target],
+        )
+
+        # The function runs hourly, so an hourly period keeps the alarm on while
+        # it's failing, rather than sending a new email for every run.
+        onboarder_alarm = onboarder.metric_errors(
+            period=Duration.hours(1),
+            statistic="Sum",
+        ).create_alarm(
+            self,
+            "mailing_list_onboarder_alarm",
+            alarm_description=(
+                "The mailing list onboarder is failing, so welcome emails may "
+                "not be getting scheduled. See 'Failed sign ups' in the README."
+            ),
+            threshold=1,
+            evaluation_periods=1,
+            comparison_operator=aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+            treat_missing_data=aws_cloudwatch.TreatMissingData.NOT_BREACHING,
+        )
+        onboarder_alarm.add_alarm_action(
+            aws_cloudwatch_actions.SnsAction(self.alert_topic)
         )
