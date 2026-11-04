@@ -238,7 +238,7 @@ class ListMonkStack(Stack):
             self,
             "mailing_list_event_receiver",
             entry="cdk/functions/mailinglist_events",
-            runtime=aws_lambda.Runtime.PYTHON_3_10,
+            runtime=aws_lambda.Runtime.PYTHON_3_12,
             index="handler.py",
             environment={
                 "MAILINGLIST_API_KEY": self.LISTMONK_API_KEY,
@@ -300,7 +300,7 @@ class ListMonkStack(Stack):
             self,
             "mailing_list_onboarder",
             entry="cdk/functions/onboard_scheduler",
-            runtime=aws_lambda.Runtime.PYTHON_3_10,
+            runtime=aws_lambda.Runtime.PYTHON_3_12,
             index="handler.py",
             environment={
                 "MAILINGLIST_API_KEY": self.LISTMONK_API_KEY,
