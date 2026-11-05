@@ -125,6 +125,10 @@ Make a note of the Access key and Secret access key for later.
 * `/MailingList/AlertEmail` The address to email when sign ups are failing. 
   AWS sends a confirmation link to this address after the first deploy, and 
   no alerts arrive until it has been clicked
+* `/MailingList/MainListUuid` The UUID of the list that new subscribers get a 
+  welcome email for being on
+* `/MailingList/WelcomeTemplateId` The ID of the welcome email's template in 
+  ListMonk, which must be a transactional template
 
 ## Failed sign ups
 

@@ -6,7 +6,6 @@ from typing import Any, TypedDict
 import boto3
 import requests
 
-MAIN_LIST_UUID = "b97e389a-c986-4725-8796-2a1cf2734e43"
 REQUEST_TIMEOUT_SECONDS = 10
 
 scheduler = boto3.client("scheduler", region_name="eu-west-2")
@@ -58,8 +57,9 @@ def get_past_slice_time() -> str:
 
 
 def is_on_main_list(subscriber: ListmonkSubscriber) -> bool:
+    main_list_uuid = os.environ["MAIN_LIST_UUID"]
     return any(
-        mailing_list["uuid"] == MAIN_LIST_UUID
+        mailing_list["uuid"] == main_list_uuid
         and mailing_list["subscription_status"] != "unsubscribed"
         for mailing_list in subscriber["lists"]
     )

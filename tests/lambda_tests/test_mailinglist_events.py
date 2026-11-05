@@ -3,11 +3,12 @@ import json
 import pytest
 import requests
 import responses
-from mailinglist_events.handler import MAIN_LIST_UUID, handler
+from mailinglist_events.handler import handler
 from responses import matchers
 
 API_URL = "https://mailinglist.example.com/api"
 AUTH_HEADER = {"Authorization": "token api-user:test-token"}
+MAIN_LIST_UUID = "11111111-1111-4111-8111-111111111111"
 OTHER_LIST_UUID = "41badaf2-7905-4116-8eac-e8817c6613e4"
 
 

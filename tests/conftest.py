@@ -12,12 +12,16 @@ os.environ.pop("AWS_PROFILE", None)
 
 import pytest
 
+MAIN_LIST_UUID = "11111111-1111-4111-8111-111111111111"
+
 
 @pytest.fixture(autouse=True)
 def test_environment(monkeypatch):
     monkeypatch.setenv("MAILINGLIST_API_USER", "api-user")
     monkeypatch.setenv("MAILINGLIST_API_KEY", "test-token")
     monkeypatch.setenv("FQDN", "mailinglist.example.com")
+    monkeypatch.setenv("MAIN_LIST_UUID", MAIN_LIST_UUID)
+    monkeypatch.setenv("WELCOME_TEMPLATE_ID", "4")
     monkeypatch.setenv(
         "EVENT_BUS_ARN",
         "arn:aws:events:eu-west-2:123456789012:event-bus/MailingListEvents-test",

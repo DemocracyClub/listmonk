@@ -91,6 +91,16 @@ class ListMonkStack(Stack):
         self.ALERT_EMAIL = aws_ssm.StringParameter.from_string_parameter_name(
             self, "AlertEmail", "/MailingList/AlertEmail"
         ).string_value
+        self.MAIN_LIST_UUID = (
+            aws_ssm.StringParameter.from_string_parameter_name(
+                self, "MainListUuid", "/MailingList/MainListUuid"
+            ).string_value
+        )
+        self.WELCOME_TEMPLATE_ID = (
+            aws_ssm.StringParameter.from_string_parameter_name(
+                self, "WelcomeTemplateId", "/MailingList/WelcomeTemplateId"
+            ).string_value
+        )
 
         # The first part of this should work, but a CDK bug means we can't look
         # up hosted zones with an SSM placeholder. Use boto to get it.
@@ -299,6 +309,8 @@ class ListMonkStack(Stack):
                 "MAILINGLIST_API_KEY": self.LISTMONK_API_KEY,
                 "FQDN": self.FQDN,
                 "EVENT_BRIDGE_ARN": self.event_bus.event_bus_arn,
+                "MAIN_LIST_UUID": self.MAIN_LIST_UUID,
+                "WELCOME_TEMPLATE_ID": self.WELCOME_TEMPLATE_ID,
             },
             timeout=Duration.seconds(30),
             # Catches events the function still fails on after Lambda's retries
@@ -394,6 +406,7 @@ class ListMonkStack(Stack):
                 "MAILINGLIST_API_KEY": self.LISTMONK_API_KEY,
                 "FQDN": self.FQDN,
                 "EVENT_BUS_ARN": self.event_bus.event_bus_arn,
+                "MAIN_LIST_UUID": self.MAIN_LIST_UUID,
                 "EVENT_BUS_ROLE_ARN": target_role.role_arn,
             },
             role=onboarder_role,

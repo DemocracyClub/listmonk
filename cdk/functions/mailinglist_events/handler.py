@@ -4,7 +4,6 @@ from typing import Any, Optional, TypedDict
 
 import requests
 
-MAIN_LIST_UUID = "b97e389a-c986-4725-8796-2a1cf2734e43"
 REQUEST_TIMEOUT_SECONDS = 10
 
 
@@ -135,11 +134,14 @@ def first_welcome_email(event: dict[str, Any]) -> None:
 
     subscriber = EmailSubscriber.from_subscriber_id(subscriber_id)
 
-    if MAIN_LIST_UUID not in subscriber.active_list_uuids:
+    if os.environ["MAIN_LIST_UUID"] not in subscriber.active_list_uuids:
         print("Subscriber not in mail email list")
         return
 
-    data = {"template_id": 4, "subscriber_id": subscriber.subscriber_id}
+    data = {
+        "template_id": int(os.environ["WELCOME_TEMPLATE_ID"]),
+        "subscriber_id": subscriber.subscriber_id,
+    }
     req = requests.post(
         format_api_url("tx"),
         json=data,
