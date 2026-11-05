@@ -11,6 +11,7 @@ from aws_cdk import (
     aws_cloudfront_origins,
     aws_cloudwatch,
     aws_cloudwatch_actions,
+    aws_ecr_assets,
     aws_ecs,
     aws_ecs_patterns,
     aws_events,
@@ -224,7 +225,13 @@ class ListMonkStack(Stack):
             self,
             "PreProcessorFunction",
             code=aws_lambda.DockerImageCode.from_image_asset(
-                "email_preprocessor"
+                "email_preprocessor",
+                platform=aws_ecr_assets.Platform.LINUX_AMD64,
+                # Lambda rejects the OCI index, with an attestation, that newer
+                # versions of Docker push by default. This needs
+                # BUILDX_NO_DEFAULT_ATTESTATIONS=1, which `make deploy` sets.
+                # Without it, the build fails rather than the deployment.
+                outputs=["type=docker,oci-mediatypes=false"],
             ),
             memory_size=1024,
             # bootstrap-email takes several seconds to run

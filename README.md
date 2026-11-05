@@ -55,6 +55,10 @@ Visit http://localhost:3000
 2. `export DC_ENVIRONMENT=` according to the environment you're deploying to
 3. run `make deploy`
 
+If you run `cdk deploy` directly, also 
+`export BUILDX_NO_DEFAULT_ATTESTATIONS=1`, or building the email preprocessor's 
+image will fail with `cannot export attestations`.
+
 
 ## New environment install
 
