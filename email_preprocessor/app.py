@@ -1,24 +1,63 @@
 import subprocess
+from pathlib import Path
 
+import markdown
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
+from starlette.templating import Jinja2Templates
+
+templates = Jinja2Templates(directory="templates")
+
+EMAIL_TEMPLATE_PATH = "default_email.html"
 
 
-async def homepage(request):
-    command = [
-        """bootstrap-email -s '<a href="#" class="btn btn-primary">Some Button</a>'"""
-    ]
-    result = subprocess.run(command, capture_output=True, text=True, shell=True)
+async def process_html(request):
+    body = await request.json()
+
+    html_content = markdown.markdown(body["markdown"])
+
+    with Path(EMAIL_TEMPLATE_PATH).open() as f:
+        html_wrapper = f.read()
+
+    html = html_wrapper.replace("""{{ template "content" . }}""", html_content)
+
+    process = subprocess.Popen(
+        ["bootstrap-email"],  # Command to run
+        cwd="/tmp/",
+        stdin=subprocess.PIPE,  # Connect the stdin pipe
+        stdout=subprocess.PIPE,  # Optionally connect the stdout pipe
+        stderr=subprocess.PIPE,  # Optionally connect the stderr pipe
+        text=True,  # Treat stdin/stdout/stderr as text streams
+    )
+
+    # Write data to stdin and close the stdin pipe
+    stdout, stderr = process.communicate(input=html)
+
     # Check if the command was successful
-    if result.returncode == 0:
-        output = result.stdout  # This is the output as a string
-    else:
-        output = result.stderr
+    output = stdout if process.returncode == 0 else stderr
 
-    return JSONResponse({"html": output})
+    return JSONResponse(
+        {
+            "html": output,
+            "status": process.returncode,
+            "stderr": stderr,
+            "stdout": stdout,
+        }
+    )
 
 
-routes = [Route("/", endpoint=homepage)]
+async def edit_view(request):
+    return templates.TemplateResponse(request, "index.html")
 
-app = Starlette(debug=True, routes=routes)
+
+routes = [
+    Route(
+        "/preprocessor/process_preprocessor",
+        endpoint=process_html,
+        methods=["POST"],
+    ),
+    Route("/preprocessor", endpoint=edit_view, methods=["GET"]),
+]
+
+app = Starlette(routes=routes)

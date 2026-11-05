@@ -1,0 +1,6 @@
+.venv
+__pycache__
+.sass-cache
+email.md
+processed.html
+final_output.html

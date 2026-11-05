@@ -4,6 +4,7 @@ import boto3
 from aws_cdk import (
     Duration,
     Environment,
+    Fn,
     Stack,
     aws_certificatemanager,
     aws_cloudfront,
@@ -200,6 +201,8 @@ class ListMonkStack(Stack):
             ),
         )
 
+        self.make_preprocessor(distribution)
+
         hosted_zone = aws_route53.HostedZone.from_lookup(
             self,
             "ListmonkDomain_id",
@@ -214,6 +217,29 @@ class ListMonkStack(Stack):
             target=aws_route53.RecordTarget.from_alias(
                 aws_route53_targets.CloudFrontTarget(distribution)
             ),
+        )
+
+    def make_preprocessor(self, distribution):
+        preprocessor = aws_lambda.DockerImageFunction(
+            self,
+            "PreProcessorFunction",
+            code=aws_lambda.DockerImageCode.from_image_asset(
+                "email_preprocessor"
+            ),
+            memory_size=1024,
+            # bootstrap-email takes several seconds to run
+            timeout=Duration.seconds(30),
+        )
+        function_url = preprocessor.add_function_url(
+            auth_type=aws_lambda.FunctionUrlAuthType.NONE
+        )
+        distribution.add_behavior(
+            "/preprocessor*",
+            aws_cloudfront_origins.HttpOrigin(
+                Fn.select(2, Fn.split("/", function_url.url))
+            ),
+            allowed_methods=aws_cloudfront.AllowedMethods.ALLOW_ALL,
+            cache_policy=aws_cloudfront.CachePolicy.CACHING_DISABLED,
         )
 
     def make_event_bus(self):

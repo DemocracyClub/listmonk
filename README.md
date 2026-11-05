@@ -139,3 +139,13 @@ from the queue.
 The same address is emailed if the hourly onboarder Lambda fails. This doesn't 
 use the queue, as the next run retries anyone who signed up in the last 24 
 hours. Check the function's logs, as anyone older than that isn't retried.
+
+## Email preprocessor
+
+`https://{ListMonkFQDN}/preprocessor` is an editor that converts Markdown to 
+HTML with the inline styles that emails need. It runs as a separate Lambda 
+function, built from `email_preprocessor/`. It's publicly accessible, and it 
+doesn't store anything.
+
+`email_preprocessor/default_email.html` is a copy of the email template, as the 
+Docker build can't read files outside of that directory. 

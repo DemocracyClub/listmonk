@@ -1,0 +1,84 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #editor, #editor .CodeMirror {
+            min-height: 90%;
+            height: 90%;
+        }
+
+        .editor-preview table, .editor-preview table *, .editor-preview-side, .editor-preview-side * {
+            border: none !important;
+        }
+    </style>
+</head>
+<body>
+<button id="get_html" data-html="">Copy HTML</button>
+<div id="editor"><textarea id="markdown_content"></textarea></div>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+
+<script>
+    const get_html_button = document.getElementById("get_html")
+
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
+
+    function remote_render(plainText, preview) {
+        const jsonData = {
+            "markdown": plainText
+        };
+
+        fetch('/preprocessor/process_preprocessor', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(jsonData)
+        })
+            .then(response => response.json()) // assuming the response is JSON
+            .then(data => {
+                preview.innerHTML = data.html
+                const regex = /<!--\s*StartContent\s*-->([\s\S]*?)<!--\s*EndContent\s*-->/;
+                const match = data.html.match(regex);
+                get_html_button.setAttribute("data-html", match[1].trim())
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    const debouncedRenderMarkdown = debounce(remote_render, 2000);
+
+    function get_html(plainText, preview) {
+        debouncedRenderMarkdown(plainText, preview)
+        return "Loading...";
+    }
+
+    new SimpleMDE({previewRender: get_html});
+
+    get_html_button.addEventListener("click", function () {
+        const htmlContent = this.getAttribute("data-html");
+        navigator.clipboard.writeText(htmlContent).then(() => {
+            console.log('HTML content copied to clipboard:', htmlContent);
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+        });
+    })
+
+</script>
+
+</body>
+</html>
