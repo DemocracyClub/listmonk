@@ -1,5 +1,7 @@
-# Use an official Python runtime as a parent image
-FROM ruby:3.2
+# Ruby runs bootstrap-email, Python runs the web app
+FROM ruby:3.2.9-bookworm
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.2 /lambda-adapter /opt/extensions/lambda-adapter
+ENV PORT=8000
 
 # Install Ruby
 # Install Python and pip
@@ -10,7 +12,7 @@ RUN apt-get update && \
 RUN mkdir -p /app/bin
 
 # Install your required Ruby Gem
-RUN gem install --bindir /app/bin bootstrap-email
+RUN gem install --bindir /app/bin bootstrap-email -v 1.5.1
 
 # Set the environment path (modify as needed)
 ENV PATH="/app/bin:${PATH}"
@@ -23,8 +25,9 @@ COPY . /app
 # Install any needed packages specified in requirements.txt
 RUN pip3 install -r requirements.txt --break-system-packages
 
-# Make port 8080 available to the world outside this container
+# Make port 8000 available to the world outside this container
 EXPOSE 8000
 
 # Run app.py when the container launches
-CMD ["uvicorn", "--host", "0.0.0.0", "app:app"]
+CMD ["uvicorn", "--host", "0.0.0.0", "--port", "8000", "app:app"]
+

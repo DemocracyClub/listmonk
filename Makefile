@@ -26,6 +26,8 @@ app/static/public/static/fonts: build/design-system
 static: app/static/public/static/dc-design-system.css app/static/public/static/images app/static/public/static/fonts
 
 
+# Lambda rejects images with attestations, see make_preprocessor in the stack
 .PHONY: deploy
+deploy: export BUILDX_NO_DEFAULT_ATTESTATIONS=1
 deploy: static
 	cdk deploy ListMonkStack

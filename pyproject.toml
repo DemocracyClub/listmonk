@@ -17,3 +17,17 @@ extend-exclude = [
     "cdk.out",
     "/node_modules",
 ]
+
+[tool.mypy]
+files = ["cdk/functions"]
+mypy_path = "cdk/functions"
+explicit_package_bases = true
+python_version = "3.12"
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

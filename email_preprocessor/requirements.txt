@@ -1,2 +1,4 @@
 starlette==0.37.2
-uvicorn
+uvicorn==0.35.0
+Markdown==3.6
+Jinja2==3.1.6

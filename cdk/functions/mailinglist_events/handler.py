@@ -1,91 +1,119 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any, Optional, TypedDict
 
 import requests
 
+REQUEST_TIMEOUT_SECONDS = 10
 
-def format_api_url(endpoint):
-    return f"https://{FQDN}/api/{endpoint}?key={API_KEY}"
+
+class ListmonkList(TypedDict):
+    id: int
+    uuid: str
+    subscription_status: str
+
+
+class ListmonkSubscriber(TypedDict):
+    email: str
+    name: str
+    attribs: dict[str, Any]
+    lists: list[ListmonkList]
+
+
+def format_api_url(endpoint: str) -> str:
+    return f"https://{os.environ.get('FQDN')}/api/{endpoint}"
+
+
+def auth_headers() -> dict[str, str]:
+    user = os.environ.get("MAILINGLIST_API_USER")
+    token = os.environ.get("MAILINGLIST_API_KEY")
+    return {"Authorization": f"token {user}:{token}"}
 
 
 @dataclass(match_args=False)
 class EmailSubscriber:
     name: str
     email: str
-    list_uuids: list
-    source: str = None
-    extra_context: dict = None
+    # Listmonk's numeric list IDs, as used when writing to the API
+    list_ids: list[int]
+    # The UUIDs of the lists this person hasn't unsubscribed from
+    active_list_uuids: list[str] = field(default_factory=list)
+    source: Optional[str] = None
+    extra_context: Optional[dict[str, Any]] = None
     status: str = "enabled"
-    subscriber_id: int = None
+    subscriber_id: Optional[int] = None
     confirmed: bool = False
 
-    def __post_init__(self):
-        # Validate email
-        if "@" not in self.email:
-            raise ValueError("Invalid email address.")
-        if "@" in self.name:
-            raise ValueError("Name cannot contain an email address")
-        if not isinstance(self.list_uuids, list):
-            raise ValueError("'list_uuids' must be a list")
-        self.list_uuids = [int(x) for x in self.list_uuids]
-
     @classmethod
-    def from_event(cls, event: dict):
+    def from_event(cls, event: dict[str, Any]) -> "EmailSubscriber":
         detail = event["detail"]
+        email = detail.get("email") or ""
+        name = detail.get("name") or ""
+        list_ids = detail.get("lists")
 
-        confirmed = False
+        if "@" not in email:
+            raise ValueError("Invalid email address.")
+        if "@" in name:
+            raise ValueError("Name cannot contain an email address")
+        if not isinstance(list_ids, list):
+            raise ValueError("'lists' must be a list")
 
         return cls(
-            email=detail.get("email"),
-            name=detail.get("name"),
-            list_uuids=detail.get("lists"),
+            email=email,
+            name=name,
+            list_ids=[int(x) for x in list_ids],
             source=event["source"],
             extra_context=detail.get("extra_context"),
             subscriber_id=detail.get("id"),
-            confirmed=confirmed,
         )
 
     @classmethod
-    def from_subscriber_id(cls, subscriber_id):
-        url = format_api_url(f"subscribers/{subscriber_id}")
-        data = requests.get(url).json()["data"]
-        print(data)
-        list_ids = [mailinglist["id"] for mailinglist in data["lists"]]
-        confirmed = any(
-            mailinglist["subscription_status"] == "confirmed"
-            for mailinglist in data["lists"]
+    def from_subscriber_id(cls, subscriber_id: int) -> "EmailSubscriber":
+        req = requests.get(
+            format_api_url(f"subscribers/{subscriber_id}"),
+            headers=auth_headers(),
+            timeout=REQUEST_TIMEOUT_SECONDS,
         )
+        req.raise_for_status()
+        data: ListmonkSubscriber = req.json()["data"]
+        print(data)
+        lists = data["lists"]
 
         return cls(
             name=data["name"],
             email=data["email"],
             extra_context=data["attribs"],
             subscriber_id=subscriber_id,
-            confirmed=confirmed,
-            list_uuids=list_ids,
+            confirmed=any(
+                mailing_list["subscription_status"] == "confirmed"
+                for mailing_list in lists
+            ),
+            list_ids=[mailing_list["id"] for mailing_list in lists],
+            active_list_uuids=[
+                mailing_list["uuid"]
+                for mailing_list in lists
+                if mailing_list["subscription_status"] != "unsubscribed"
+            ],
         )
 
-    def as_listmonk_json(self):
+    def as_listmonk_json(self) -> dict[str, Any]:
         return {
             "email": self.email,
             "name": self.name,
             "status": self.status,
-            "lists": self.list_uuids,
+            "lists": self.list_ids,
             "attribs": self.extra_context,
         }
 
 
-API_KEY = os.environ.get("MAILINGLIST_API_KEY")
-FQDN = os.environ.get("FQDN")
-
-
-def new_subscription(event):
+def new_subscription(event: dict[str, Any]) -> Optional[bool]:
     subscriber = EmailSubscriber.from_event(event)
 
-    url = format_api_url("subscribers")
     req = requests.post(
-        url,
+        format_api_url("subscribers"),
         json=subscriber.as_listmonk_json(),
+        headers=auth_headers(),
+        timeout=REQUEST_TIMEOUT_SECONDS,
     )
     if req.status_code == 200:
         print("added new person")
@@ -95,34 +123,42 @@ def new_subscription(event):
         print("person alrady exists")
         return True
     req.raise_for_status()
+    return None
 
 
-def first_welcome_email(event):
-    if not event["detail"]["subscriber_id"]:
+def first_welcome_email(event: dict[str, Any]) -> None:
+    subscriber_id: Optional[int] = event["detail"].get("subscriber_id")
+    if not subscriber_id:
         print("subscriber ID not in event")
         return
 
-    subscriber = EmailSubscriber.from_subscriber_id(
-        event["detail"]["subscriber_id"]
-    )
+    subscriber = EmailSubscriber.from_subscriber_id(subscriber_id)
 
-    if "b97e389a-c986-4725-8796-2a1cf2734e43" not in subscriber.list_uuids:
+    if os.environ["MAIN_LIST_UUID"] not in subscriber.active_list_uuids:
         print("Subscriber not in mail email list")
         return
 
-    url = format_api_url("tx")
-    data = {"template_id": 4, "subscriber_id": subscriber.subscriber_id}
-    req = requests.post(url, json=data)
+    data = {
+        "template_id": int(os.environ["WELCOME_TEMPLATE_ID"]),
+        "subscriber_id": subscriber.subscriber_id,
+    }
+    req = requests.post(
+        format_api_url("tx"),
+        json=data,
+        headers=auth_headers(),
+        timeout=REQUEST_TIMEOUT_SECONDS,
+    )
     req.raise_for_status()
 
 
-def handler(event, context):
+def handler(event: dict[str, Any], context: Any) -> Optional[bool]:
     print(event)
     detail_type = event["detail-type"]
 
     if detail_type == "new_subscription":
         return new_subscription(event)
     if detail_type == "first_welcome_email":
-        return first_welcome_email(event)
+        first_welcome_email(event)
+        return None
 
     raise ValueError(f"Unknown detail-type '{detail_type}'")

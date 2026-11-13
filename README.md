@@ -55,6 +55,10 @@ Visit http://localhost:3000
 2. `export DC_ENVIRONMENT=` according to the environment you're deploying to
 3. run `make deploy`
 
+If you run `cdk deploy` directly, also 
+`export BUILDX_NO_DEFAULT_ATTESTATIONS=1`, or building the email preprocessor's 
+image will fail with `cannot export attestations`.
+
 
 ## New environment install
 
@@ -108,9 +112,48 @@ Make a note of the Access key and Secret access key for later.
 * `/MailingList/CertificateArn` ACM ARN (as above) 
 * `/MailingList/CloudFrontOriginToken` A private token to prevent direct 
   access to API Gateway. Set to something long and unguessable
-* `/MailingList/ListMonkApiKey` The API key that ListMonk API Clients must 
-  use to authenticate against `https://{ListMonkFQDN}/api/` via the 
-  `Authorization` header
+* `/MailingList/ListMonkApiKey` The token the Lambda functions use to
+  authenticate against `https://{ListMonkFQDN}/api/`. Create an API user called
+  `lambda_key` in ListMonk's admin UI (the name is set by `LISTMONK_API_USER` 
+  in `cdk/stacks/listmonk_stack.py`), with a user role that has the 
+  `lists:get_all`, `lists:manage_all`, `subscribers:get_all`, 
+  `subscribers:manage`, `subscribers:sql_query` and `tx:send` permissions, and 
+  use its token as the value
 * `/MailingList/LISTMONK_db__host` The RDS host
 * `/MailingList/LISTMONK_db__user` The RDS user
 * `/MailingList/LISTMONK_db__password` The RDS password
+* `/MailingList/AlertEmail` The address to email when sign ups are failing. 
+  AWS sends a confirmation link to this address after the first deploy, and 
+  no alerts arrive until it has been clicked
+* `/MailingList/MainListUuid` The UUID of the list that new subscribers get a 
+  welcome email for being on
+* `/MailingList/WelcomeTemplateId` The ID of the welcome email's template in 
+  ListMonk, which must be a transactional template
+
+## Failed sign ups
+
+Sign up and welcome email events that can't be processed go to a dead letter 
+queue, after Lambda has retried them twice. An email is sent to 
+`/MailingList/AlertEmail` when the queue stops being empty. 
+
+The alarm stays on while there are messages in the queue, so further failures 
+won't send another email until it has been cleared. Messages are deleted after 
+14 days, so anything still there needs replaying before then.
+
+To replay a message, fix the problem and then invoke the event receiver Lambda 
+with the message body as its payload. Once it has succeeded, delete the message 
+from the queue.
+
+The same address is emailed if the hourly onboarder Lambda fails. This doesn't 
+use the queue, as the next run retries anyone who signed up in the last 24 
+hours. Check the function's logs, as anyone older than that isn't retried.
+
+## Email preprocessor
+
+`https://{ListMonkFQDN}/preprocessor` is an editor that converts Markdown to 
+HTML with the inline styles that emails need. It runs as a separate Lambda 
+function, built from `email_preprocessor/`. It's publicly accessible, and it 
+doesn't store anything.
+
+`email_preprocessor/default_email.html` is a copy of the email template, as the 
+Docker build can't read files outside of that directory. 
